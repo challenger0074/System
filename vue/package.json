@@ -1,0 +1,85 @@
+{
+  "name": "test",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Hello World!",
+  "main": "electron/main.js",
+  "author": "Jane Doe",
+  "scripts": {
+    "dev": "concurrently \"cross-env NODE_ENV=development vite\" \"nodemon --exec electron . --watch ./ --ext .js,.html,.css,.vue\"",
+    "build": "run-p type-check \"build-only {@}\" --",
+    "preview": "vite preview",
+    "build-only": "vite build",
+    "type-check": "vue-tsc --build --force",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "^2.3.1",
+    "axios": "^1.7.2",
+    "concurrently": "^9.1.0",
+    "element-plus": "^2.8.0",
+    "file-saver": "^2.0.5",
+    "jquery": "^3.7.1",
+    "js-cookie": "^3.0.5",
+    "lodash-es": "^4.17.21",
+    "nanoid": "^5.0.7",
+    "pinia": "^2.1.7",
+    "sass": "^1.77.8",
+    "vue": "^3.4.29",
+    "vue-router": "^4.4.0",
+    "vuex": "^4.1.0"
+  },
+  "devDependencies": {
+    "@tsconfig/node20": "^20.1.4",
+    "@types/node": "^20.14.5",
+    "@types/vue": "^2.0.0",
+    "@types/webpack-env": "^1.18.5",
+    "@vitejs/plugin-vue": "^5.0.5",
+    "@vue/tsconfig": "^0.5.1",
+    "cross-env": "^7.0.3",
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
+    "less": "^4.2.0",
+    "naive-ui": "^2.40.3",
+    "nodemon": "^3.1.7",
+    "npm-run-all2": "^6.2.0",
+    "typescript": "^5.5.4",
+    "vfonts": "^0.0.3",
+    "vite": "^5.3.1",
+    "vue-tsc": "^2.0.21"
+  },
+  "build": {
+    "appId": "luOne",
+    "productName": "sd",
+    "files": [
+      "dist/**/*",
+      "electron/**/*"
+    ],
+    "directories": {
+      "buildResources": "assets",
+      "output": "electron-dist"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icon.ico",
+      "signingHashAlgorithms": ["sha256"]
+    },
+    "mac": {
+      "category": "public.app-category.utilities"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "runAfterFinish": true,
+      "shortcutName": "client-ico"
+
+    }
+  }
+}

@@ -1,0 +1,54 @@
+菜单样例
+<el-menu
+              active-text-color="#ffd04b"
+              background-color="#545c64"
+              class="el-menu-vertical-demo"
+              :default-active="activePath"
+              text-color="#fff"
+              @open="handleOpen"
+              @close="handleClose"
+              :router="true"
+          >
+            <el-sub-menu :index="item.path+''" v-for="item in menuList" :key="item.id">
+              <template #title>
+                <el-icon><location /></el-icon>
+                <span>{{ item.title }}</span>
+              </template>
+              <el-menu-item-group title="Group One">
+                <el-menu-item :index="`${item.id}-1`">Item One</el-menu-item>
+                <el-menu-item :index="`${item.id}-2`">Item Two</el-menu-item>
+              </el-menu-item-group>
+              <el-menu-item-group title="Group Two">
+                <el-menu-item :index="`${item.id}-3`">Item Three</el-menu-item>
+              </el-menu-item-group>
+
+              <el-menu-item
+                  v-for="it in item.slist"
+                  :key="it.id"
+                  :index="'/home'+it.path"
+                  @click="saveState(it.path)"
+              >
+                <template #title>
+                  <el-icon><location/></el-icon>
+                  <span>{{ it.title }}</span>
+                </template>
+              </el-menu-item>
+
+              <el-sub-menu :index="`${item.id}-4`">
+                <template #title>Item Four</template>
+                <el-menu-item :index="`${item.id}-4-1`">Item One</el-menu-item>
+              </el-sub-menu>
+            </el-sub-menu>
+            <el-menu-item :index="String(20)">
+              <el-icon><icon-menu /></el-icon>
+              <span>Navigator Two</span>
+            </el-menu-item>
+            <el-menu-item :index="String(30)" disabled>
+              <el-icon><document /></el-icon>
+              <span>Navigator Three</span>
+            </el-menu-item>
+            <el-menu-item :index="String(40)">
+              <el-icon><setting /></el-icon>
+              <span>Navigator Four</span>
+            </el-menu-item>
+          </el-menu>

@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.ganxq.dbcontrol.mapper.UserMapper">
+    <resultMap id="UserResultMap" type="cn.ganxq.dbcontrol.entity.User">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="password" column="password"/>
+        <result property="email" column="email"/>
+        <result property="role" column="role"/>
+        <result property="state" column="state"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insert2User" parameterType="cn.ganxq.dbcontrol.entity.User">
+        INSERT INTO user (username, password, email, created_at, updated_at)
+        VALUES (#{username}, #{password}, #{email}, #{createdAt}, #{updatedAt})
+    </insert>
+    <select id="getAllUser" resultMap="UserResultMap">
+        SELECT * FROM `user`
+        <if test="username != null and username != ''">
+            WHERE username LIKE #{username}
+        </if>
+        LIMIT #{pageStart}, #{pageSize}
+    </select>
+
+
+    <!--<select id="getAllUser" resultMap="UserResultMap">
+        SELECT * FROM `user`
+        <if test="username != null and username != ''">
+            WHERE username LIKE CONCAT('%', #{username}, '%')
+        </if>
+        LIMIT #{pageStart}, #{pageSize}
+    </select>-->
+    <select id="getUserCounts" resultType="java.lang.Integer">
+        SELECT count(*) FROM `user`
+        <if test="username!=null">
+            WHERE username like #{username}
+        </if>
+    </select>
+
+<!--   GGGGGGGGGGGGGGGGGGGGGGG    -->
+    <select id="countUser" resultType="Integer">
+        SELECT count(0)
+        FROM user u
+        WHERE u.state = '1'
+    </select>
+
+    <resultMap id="userMap" type="cn.ganxq.dbcontrol.model.One2Many">
+        <id column="userId" property="userId"/>
+        <result column="username" property="username"/>
+        <result column="nickname" property="nickname"/>
+        <result column="createTime" property="createTime"/>
+        <result column="updateTime" property="updateTime"/>
+        <result column="deleteStatus" property="deleteStatus"/>
+        <collection property="roles" ofType="com.alibaba.fastjson.JSONObject">
+            <id column="roleId" property="roleId"/>
+            <result column="roleName" property="roleName"/>
+        </collection>
+    </resultMap>
+    <select id="listUser" resultMap="userMap">
+        SELECT u.*,
+               r.id        roleId,
+               r.role_name roleName
+        FROM (
+                 SELECT id                                      userId,
+                        username                                username,
+                        nickname                                nickname,
+                        state                           deleteStatus,
+                        DATE_FORMAT(create_at, '%Y.%m.%d %T') createTime,
+                        DATE_FORMAT(update_at, '%Y.%m.%d %T') updateTime
+                 FROM user
+                 WHERE state = '1'
+                 ORDER BY id
+                     LIMIT #{offSet}, #{pageRow}
+             ) u
+                 LEFT JOIN user_roles ur on ur.user_id = u.userId
+                 LEFT JOIN roles r ON r.id = ur.role_id
+        ORDER BY u.userId, r.id
+    </select>
+
+    <delete id="removeUserAllRole">
+        delete
+        from user_roles
+        where user_id = #{userId}
+    </delete>
+
+    <insert id="batchAddUserRole">
+        insert into user_roles
+        (user_id, role_id) values
+        <foreach collection="roleIds" item="i" separator=",">
+            (#{userId},#{i})
+        </foreach>
+    </insert>
+
+    <select id="getAllRoles" resultType="com.alibaba.fastjson.JSONObject">
+        SELECT id        roleId,
+               role_name roleName
+        FROM roles
+        WHERE state = '1'
+    </select>
+
+    <insert id="addUser" useGeneratedKeys="true" keyProperty="userId">
+        INSERT INTO user
+            (username, password, nickname)
+        VALUES (#{username}, #{password}, #{nickname})
+    </insert>
+
+    <update id="updateUser">
+        UPDATE user
+        SET
+        nickname = #{nickname}
+        <if test="password !='' and password !=null">
+            , password = #{password}
+        </if>
+        , state = #{deleteStatus}
+        WHERE id = #{userId} and id != 10001
+    </update>
+    <resultMap id="roleMap" type="cn.ganxq.dbcontrol.model.One2Many">
+        <id column="roleId" property="roleId"/>
+        <result column="roleName" property="roleName"/>
+        <collection property="users" ofType="com.alibaba.fastjson.JSONObject">
+            <id column="userId" property="userId"/>
+            <result column="nickname" property="nickname"/>
+        </collection>
+        <collection property="menus" ofType="cn.ganxq.dbcontrol.model.One2Many">
+            <id column="menuCode" property="menuCode"/>
+            <result column="menuName" property="menuName"/>
+            <collection property="permissions" ofType="com.alibaba.fastjson.JSONObject">
+                <id column="permissionId" property="permissionId"/>
+                <result column="permissionName" property="permissionName"/>
+            </collection>
+        </collection>
+    </resultMap>
+    <select id="listRole" resultMap="roleMap">
+        SELECT r.id              roleId,
+               r.role_name       roleName,
+               u.id              userId,
+               u.nickname,
+               p.id              permissionId,
+               p.menu_code       menuCode,
+               p.menu_name       menuName,
+               p.permission_name permissionName
+        FROM roles r
+                 LEFT JOIN user_roles ur on ur.role_id = r.id
+                 LEFT JOIN user u ON u.id = ur.user_id AND u.state = '1'
+                 LEFT JOIN role_permissions rp ON r.id = rp.role_id AND rp.state = '1'
+                 LEFT JOIN permissions p ON rp.permission_id = p.id
+        WHERE r.state = '1'
+        ORDER BY r.id, p.id
+    </select>
+    <resultMap id="permissionMap" type="cn.ganxq.dbcontrol.model.One2Many">
+        <id column="menuName" property="menuName"/>
+        <collection property="permissions" ofType="com.alibaba.fastjson.JSONObject">
+            <id column="id" property="id"/>
+            <result column="permissionName" property="permissionName"/>
+            <result column="requiredPerm" property="requiredPerm" javaType="Integer"/>
+        </collection>
+    </resultMap>
+    <select id="listAllPermission" resultMap="permissionMap">
+        SELECT p.id,
+               p.menu_name           menuName,
+               p.permission_name     permissionName,
+               p.required_permission requiredPerm
+        FROM permissions p;
+    </select>
+
+    <insert id="insertRole" useGeneratedKeys="true" keyProperty="roleId">
+        INSERT INTO roles
+            (role_name)
+        VALUES (#{roleName})
+    </insert>
+
+    <insert id="insertRolePermission">
+        insert into role_permissions (role_id, permission_id)
+        values
+        <foreach collection="permissions" item="item" index="index" separator=",">
+            (#{roleId}, #{item})
+        </foreach>
+    </insert>
+
+    <resultMap id="aRole" type="cn.ganxq.dbcontrol.model.One2Many">
+        <id column="roleId" property="roleId"/>
+        <result column="roleName" property="roleName"/>
+        <collection property="permissionIds" ofType="Integer">
+            <id column="permissionId" property="permissionId"/>
+        </collection>
+    </resultMap>
+    <select id="getRoleAllInfo" resultMap="aRole">
+        SELECT r.id        roleId,
+               r.role_name roleName,
+               p.id        permissionId
+        FROM roles r
+                 LEFT JOIN role_permissions rp ON r.id = rp.role_id AND rp.state = '1'
+                 LEFT JOIN permissions p ON rp.permission_id = p.id
+        WHERE r.id = #{roleId}
+    </select>
+
+    <select id="countRoleUser" resultType="Integer">
+        select count(0)
+        from user_roles ur
+                 inner join user u on ur.user_id = u.id
+        where ur.role_id = #{roleId}
+          and u.state = '1'
+    </select>
+
+    <update id="removeRole">
+        UPDATE roles
+        SET state = '2'
+        WHERE id = #{roleId}
+          and id != 1
+    </update>
+    <update id="removeRoleAllPermission">
+        UPDATE role_permissions
+        SET state = '2'
+        WHERE role_id = #{roleId}
+    </update>
+
+    <update id="removeOldPermission">
+        UPDATE role_permissions
+        SET
+        state = '2'
+        WHERE role_id = #{roleId}
+        AND permission_id in (
+        <foreach collection="permissions" item="item" index="index" separator=",">
+            #{item}
+        </foreach>
+        )
+    </update>
+    <update id="updateRoleName">
+        UPDATE roles
+        SET role_name = #{roleName}
+        WHERE id = #{roleId}
+    </update>
+    <select id="queryExistUsername" resultType="int">
+        select count(0)
+        from user
+        WHERE username = #{username}
+          AND state = '1';
+    </select>
+
+
+
+
+
+
+</mapper>

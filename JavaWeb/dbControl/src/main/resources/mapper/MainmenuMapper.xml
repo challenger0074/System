@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.ganxq.dbcontrol.mapper.MainmenuMapper">
+<!--映射实体-->
+    <resultMap id="menuMap" type="cn.ganxq.dbcontrol.entity.Mainmenu">
+        <id column="id" jdbcType="INTEGER" property="id" />
+        <result column="title" jdbcType="VARCHAR" property="title" />
+        <result column="path" jdbcType="VARCHAR" property="path" />
+        <result column="icon" jdbcType="VARCHAR" property="icon" />
+        <collection property="slist" ofType="cn.ganxq.dbcontrol.entity.Submenu">
+            <id column="sid" jdbcType="INTEGER" property="id" />
+            <result column="stitle" jdbcType="VARCHAR" property="title" />
+            <result column="sicon" jdbcType="VARCHAR" property="icon" />
+            <result column="spath" jdbcType="VARCHAR" property="path" />
+        </collection>
+    </resultMap>
+    <select id="getMainMenus" resultMap="menuMap">
+        SELECT mm.*,sm.id sid,sm.title stitle,sm.icon sicon, sm.path as spath
+        FROM mainmenu mm LEFT JOIN submenu sm ON mm.id=sm.mid
+    </select>
+</mapper>
